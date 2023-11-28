@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox fx:id="root" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.jfxbase.oopjfxbase.controllers.ResultController">
+    <children>
+        <Label fx:id="victoryLabel" alignment="CENTER" prefHeight="231.0" prefWidth="600.0" style="-fx-background-color: #606470; -fx-font-weight: bold;" text="... has won" textFill="WHITE">
+            <font>
+                <Font size="36.0" />
+            </font>
+        </Label>
+        <HBox alignment="CENTER" prefHeight="170.0" prefWidth="600.0" spacing="100.0" style="-fx-background-color: #f7f7f7;">
+            <children>
+                <Button fx:id="rematchButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#rematch" prefHeight="64.0" prefWidth="181.0" style="-fx-background-radius: 6%; -fx-background-color: #81b64c;" text="Rematch">
+                    <font>
+                        <Font size="20.0" />
+                    </font>
+                </Button>
+                <Button fx:id="backButton" mnemonicParsing="false" onAction="#back" prefHeight="64.0" prefWidth="181.0" style="-fx-background-radius: 6%;" text="Back">
+                    <font>
+                        <Font size="20.0" />
+                    </font>
+                </Button>
+            </children>
+        </HBox>
+    </children>
+</VBox>
