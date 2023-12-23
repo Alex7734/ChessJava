@@ -25,13 +25,9 @@ public class FxChessView extends Application {
         stage.setScene(scene);
         stage.show();
 
-        MenuController controller = root.getController();
-
-
         stage.setOnCloseRequest(event -> {
             System.exit(0);
         });
-
 
         stage.setOnCloseRequest(event -> {
             System.exit(0);

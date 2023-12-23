@@ -1,6 +1,6 @@
 package com.jfxbase.oopjfxbase.controllers;
 
-import com.jfxbase.oopjfxbase.view.BoardGrid;
+import com.jfxbase.oopjfxbase.view.BoardView;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,7 +23,7 @@ public class ResultController {
     }
 
     public void rematch() {
-        BoardGrid board = new BoardGrid(primaryStage);
+        BoardView board = new BoardView(primaryStage);
         Scene scene = new Scene(board);
         primaryStage.setScene(scene);
         Stage stage = (Stage) root.getScene().getWindow();

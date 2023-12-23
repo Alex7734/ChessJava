@@ -1,4 +1,4 @@
-package com.jfxbase.oopjfxbase.model;
+package com.jfxbase.oopjfxbase.model.game;
 
 import com.jfxbase.oopjfxbase.model.pieces.Piece;
 

@@ -25,7 +25,7 @@ public class ApplicationHandler {
         this.stage = stage;
         this.stage.setTitle(Environment.APP_TITLE);
         this.stage.setFullScreen(Environment.IS_FULLSCREEN);
-        this.stage.setScene(new Scene(this.views.get(SCENE_IDENTIFIER.MENU), 800, 800));
+        this.stage.setScene(new Scene(this.views.get(SCENE_IDENTIFIER.MENU), 600, 800));
         this.stage.show();
 
         Logger.info("Application started..");

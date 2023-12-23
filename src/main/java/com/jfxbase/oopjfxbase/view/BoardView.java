@@ -1,8 +1,9 @@
 package com.jfxbase.oopjfxbase.view;
 
-import com.jfxbase.oopjfxbase.interfaces.GameModel;
-import com.jfxbase.oopjfxbase.model.*;
 import com.jfxbase.oopjfxbase.controllers.ResultController;
+import com.jfxbase.oopjfxbase.interfaces.GameModel;
+import com.jfxbase.oopjfxbase.model.game.Game;
+import com.jfxbase.oopjfxbase.model.game.Position;
 import com.jfxbase.oopjfxbase.model.pieces.Piece;
 import com.jfxbase.oopjfxbase.utils.enums.Direction;
 import com.jfxbase.oopjfxbase.utils.enums.GameState;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class BoardGrid extends GridPane {
+public class BoardView extends GridPane {
 
     private GameModel model;
     private Piece selectedPiece;
@@ -35,7 +36,7 @@ public class BoardGrid extends GridPane {
 
     Stage stage;
 
-    public BoardGrid(Stage stage) {
+    public BoardView(Stage stage) {
         this.stage = stage;
         initModel();
         displayBackground();
@@ -85,7 +86,6 @@ public class BoardGrid extends GridPane {
 
     private Image getImage(String str) {
         switch (str) {
-            case "invalidMove" -> str = "img/invalidMove.png";
             case "highlight" -> str = "img/highlighted.png";
             case "bgGreen1" -> str = "img/boardGreen1.png";
             case "bgGreen2" -> str = "img/boardGreen2.png";
@@ -114,7 +114,7 @@ public class BoardGrid extends GridPane {
     private void highlightValidMoves(Piece selectedPiece, Position selectedPos) {
         clearHighlights();
 
-        if (selectedPiece != null && model.getCurrentPlayer().color() == selectedPiece.getColor()) {
+        if (selectedPiece != null && model.getCurrentPlayer().getColor() == selectedPiece.getColor()) {
             highlightedPositions = model.getPossibleMoves(selectedPos);
 
             for (Position move : highlightedPositions) {

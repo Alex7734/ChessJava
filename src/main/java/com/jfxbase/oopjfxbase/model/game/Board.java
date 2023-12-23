@@ -1,8 +1,8 @@
-package com.jfxbase.oopjfxbase.model;
+package com.jfxbase.oopjfxbase.model.game;
 
+import com.jfxbase.oopjfxbase.model.player.Player;
 import com.jfxbase.oopjfxbase.model.pieces.Piece;
 import com.jfxbase.oopjfxbase.utils.enums.Color;
-import com.jfxbase.oopjfxbase.utils.records.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ public class Board {
 
     private final Square[][] squares;
 
-    public Board() {
+    public Board(Board board) {
         squares = new Square[8][8];
         for (int i = 0; i < squares.length; i++) {
             for (int j = 0; j < squares.length; j++) {
@@ -20,7 +20,7 @@ public class Board {
         }
     }
 
-    public Square[][] getSquares() {
+    public Square[][] getBoard() {
         return squares;
     }
 
@@ -89,7 +89,7 @@ public class Board {
             for (int j = 0; j < squares[i].length; j++) {
                 Position pos = new Position(j, i);
                 if (!isFree(pos)) {
-                    if (player.color() == getPiece(pos).getColor()) {
+                    if (player.getColor() == getPiece(pos).getColor()) {
                         nbPieces.add(new Position(j, i));
                     }
                 }
@@ -108,35 +108,5 @@ public class Board {
             }
         }
         return null;
-    }
-
-    public Board copy() {
-        Board copiedBoard = new Board();
-
-        for (int i = 0; i < squares.length; i++) {
-            for (int j = 0; j < squares[i].length; j++) {
-                Position pos = new Position(j, i);
-                Piece originalPiece = getPiece(pos);
-                Piece copiedPiece = (originalPiece != null) ? originalPiece.copy() : null;
-                copiedBoard.setPiece(copiedPiece, pos);
-            }
-        }
-
-        return copiedBoard;
-    }
-
-    public void restore(Board otherBoard) {
-        Square[][] otherSquares = otherBoard.getSquares();
-
-        for (int i = 0; i < squares.length; i++) {
-            for (int j = 0; j < squares[i].length; j++) {
-                Position pos = new Position(j, i);
-                Piece otherPiece = otherBoard.getPiece(pos);
-                Piece thisPiece = (otherPiece != null) ? otherPiece.copy() : null;
-
-                squares[i][j].setPiece(thisPiece);
-            }
-
-        }
     }
 }

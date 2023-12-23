@@ -1,9 +1,9 @@
 package com.jfxbase.oopjfxbase.interfaces;
 
-import com.jfxbase.oopjfxbase.model.Position;
+import com.jfxbase.oopjfxbase.model.game.Position;
 import com.jfxbase.oopjfxbase.model.pieces.Piece;
 import com.jfxbase.oopjfxbase.utils.enums.GameState;
-import com.jfxbase.oopjfxbase.utils.records.Player;
+import com.jfxbase.oopjfxbase.model.player.Player;
 
 import java.util.List;
 

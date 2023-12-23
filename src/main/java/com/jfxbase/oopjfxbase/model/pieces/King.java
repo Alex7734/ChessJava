@@ -1,6 +1,7 @@
 package com.jfxbase.oopjfxbase.model.pieces;
 
-import com.jfxbase.oopjfxbase.model.*;
+import com.jfxbase.oopjfxbase.model.game.Board;
+import com.jfxbase.oopjfxbase.model.game.Position;
 import com.jfxbase.oopjfxbase.utils.enums.Color;
 import com.jfxbase.oopjfxbase.utils.enums.Direction;
 

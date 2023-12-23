@@ -1,8 +1,14 @@
-package com.jfxbase.oopjfxbase.utils.records;
+package com.jfxbase.oopjfxbase.model.player;
 
 import com.jfxbase.oopjfxbase.utils.enums.Color;
 
-public record Player(Color color) {
+public class Player {
+
+    private final Color color;
+
+    public Player(Color color) {
+        this.color = color;
+    }
 
     @Override
     public int hashCode() {
@@ -14,13 +20,10 @@ public record Player(Color color) {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Player other = (Player) obj;
+        Player other = (Player) obj;
         return this.color == other.color;
     }
 
@@ -30,5 +33,9 @@ public record Player(Color color) {
             return "white";
         }
         return "black";
+    }
+
+    public Color getColor() {
+        return color;
     }
 }

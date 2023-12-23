@@ -1,9 +1,7 @@
 package com.jfxbase.oopjfxbase.utils.enums;
 
 public enum SCENE_IDENTIFIER {
-    MENU("Menu.fxml"),
-    HELLO("hello-view.fxml"),
-    GOOD_BYE("good-bye-view.fxml");
+    MENU("Menu.fxml");
 
     public final String label;
 

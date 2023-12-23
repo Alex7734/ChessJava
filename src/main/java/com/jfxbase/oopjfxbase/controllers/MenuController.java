@@ -1,6 +1,6 @@
 package com.jfxbase.oopjfxbase.controllers;
 
-import com.jfxbase.oopjfxbase.view.BoardGrid;
+import com.jfxbase.oopjfxbase.view.BoardView;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -14,7 +14,7 @@ public class MenuController {
 
     public void play() {
         Stage stage = (Stage) root.getScene().getWindow();
-        BoardGrid board = new BoardGrid(stage);
+        BoardView board = new BoardView(stage);
         Scene scene = new Scene(board);
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {

@@ -1,42 +1,41 @@
-package com.jfxbase.oopjfxbase.model;
+package com.jfxbase.oopjfxbase.model.game;
 
 import com.jfxbase.oopjfxbase.interfaces.GameModel;
+import com.jfxbase.oopjfxbase.model.player.Player;
 import com.jfxbase.oopjfxbase.model.pieces.*;
+import com.jfxbase.oopjfxbase.utils.Logger;
 import com.jfxbase.oopjfxbase.utils.enums.Color;
 import com.jfxbase.oopjfxbase.utils.enums.Direction;
 import com.jfxbase.oopjfxbase.utils.enums.GameState;
-import com.jfxbase.oopjfxbase.utils.records.Player;
 
+import java.util.Stack;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 public class Game implements GameModel {
 
-    private final Board board;
+    private Board board;
     private final Player white;
     private final Player black;
     private Player currentPlayer;
     private final King whiteKing;
     private final King blackKing;
     private GameState state;
-    private  Position pawnEnPassant;
-    private int fiftyMoveCounter;
-    private Stack<GameSnapshot> moveHistory;
+    private Position pawnEnPassant;
+    private final Stack<Board> boardHistory = new Stack<>();
 
 
     public Game() {
         white = new Player(Color.WHITE);
         black = new Player(Color.BLACK);
-        board = new Board();
+        board = new Board(null);
         whiteKing = new King(Color.WHITE);
         blackKing = new King(Color.BLACK);
-        moveHistory = new Stack<>();
     }
 
     @Override
     public void start() {
-        for (int i = 0; i < board.getSquares().length; i++) {
+        for (int i = 0; i < board.getBoard().length; i++) {
             board.setPiece(new Pawn(Color.WHITE), new Position(1, i));
             board.setPiece(new Pawn(Color.BLACK), new Position(6, i));
             switch (i) {
@@ -73,7 +72,7 @@ public class Game implements GameModel {
 
     @Override
     public Player getOppositePlayer() {
-        return currentPlayer.color() == Color.BLACK ? white : black;
+        return currentPlayer.getColor() == Color.BLACK ? white : black;
     }
 
     @Override
@@ -84,7 +83,7 @@ public class Game implements GameModel {
     @Override
     public Piece getPiece(Position pos) {
         if (!board.contains(pos)) {
-            throw new IllegalArgumentException("The given position is not on the board.");
+            Logger.error("The given position is not on the board.");
         }
         return board.getPiece(pos);
     }
@@ -97,32 +96,40 @@ public class Game implements GameModel {
     @Override
     public boolean isCurrentPlayerPosition(Position pos) {
         if (!board.contains(pos)) {
-            throw new IllegalArgumentException("The given position is not on the board.");
+            throw new IllegalArgumentException("La position donnée n'est pas dans le tableau.");
         }
         if (getPiece(pos) == null) {
-            throw new IllegalArgumentException("There is no piece at this position.");
+            throw new IllegalArgumentException("Il n'y a pas de piece à cette position.");
         }
-        return getPiece(pos).getColor() == currentPlayer.color();
+        return getPiece(pos).getColor() == currentPlayer.getColor();
+    }
+
+    public Board getBoard() {
+        return board;
     }
 
     @Override
     public void movePiecePosition(Position oldPos, Position newPos) {
         if (!board.contains(oldPos)) {
-            throw new IllegalArgumentException("The first position given does not fit in the table.");
+            Logger.error("The first position given is not in the board.");
+            throw new IllegalArgumentException("ERROR: The first position given is not in the board.");
         } else if (!board.contains(newPos)) {
-            throw new IllegalArgumentException("The second position given does not fit into the table.");
+            Logger.error("The second position given is not in the board.");
+            throw new IllegalArgumentException("ERROR: The second position given is not in the board.");
         } else if (board.isFree(oldPos)) {
-            throw new IllegalArgumentException("There is no piece at this position.");
+            Logger.error("There is no piece at this position");
+            throw new IllegalArgumentException("ERROR: There is no piece at this position");
         } else if (!this.isCurrentPlayerPosition(oldPos)) {
-            throw new IllegalArgumentException("This piece does not belong to you.");
+            Logger.error("You can't move this piece!");
+            throw new IllegalArgumentException("ERROR: You can't move this piece!");
         } else if (!board.getPiece(oldPos).getPossibleMoves(oldPos, board).contains(newPos)) {
-            throw new IllegalArgumentException("You cannot make this move.");
+            Logger.error("This move is not possible!");
+            throw new IllegalArgumentException("ERROR: This move is not possible!");
         } else if (!isValidMove(oldPos, newPos)) {
-            throw new IllegalArgumentException("This move is invalid.");
+            Logger.error("This move is not valid!");
+            throw new IllegalArgumentException("ERROR: This move is not valid!");
         }
 
-        GameSnapshot snapshot = new GameSnapshot(board.copy(), currentPlayer, state, pawnEnPassant, fiftyMoveCounter);
-        moveHistory.push(snapshot);
         Piece piece = getPiece(oldPos);
         board.setPiece(piece, newPos);
         board.dropPiece(oldPos);
@@ -131,40 +138,42 @@ public class Game implements GameModel {
         promotion(newPos);
         castle(piece,oldPos,newPos);
 
-        if (check()){
-            System.out.println("Check");
-            this.state = GameState.CHECK;
-        } else if (this.stalemate()) {
-            this.state = GameState.STALE_MATE;
-        } else {
-            System.out.println("Play");
-            this.state = GameState.PLAY;
-        }
+        state = GameState.PLAY;
 
-        if (board.getPiece(newPos) == null || board.getPiece(newPos) instanceof Pawn) {
-            fiftyMoveCounter++;
-        } else {
-            fiftyMoveCounter = 0;
-        }
-
-        if (fiftyMoveCounter >= 50) {
+        if (check()) {
+            state = GameState.CHECK;
+            if (checkMate()) {
+                state = GameState.CHECK_MATE;
+            }
+        } else if (stalemate()) {
             state = GameState.STALE_MATE;
         }
-
+        boardHistory.push(new Board(board));
         currentPlayer = getOppositePlayer();
     }
 
+    public List<Position> getPossibleMovesForPlayer(Player player) {
+        List<Position> possibleMoves = new ArrayList<>();
 
-    public void undoMove() {
-        if (!moveHistory.isEmpty()) {
-            GameSnapshot snapshot = moveHistory.pop();
-            board.restore(snapshot.getBoard());
-            currentPlayer = snapshot.getCurrentPlayer();
-            state = snapshot.getState();
-            pawnEnPassant = snapshot.getPawnEnPassant();
-            fiftyMoveCounter = snapshot.getFiftyMoveCounter();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Position pos = new Position(i, j);
+                Piece piece = getPiece(pos);
+
+                if (piece != null && piece.getColor() == player.getColor()) {
+                    List<Position> pieceMoves = piece.getPossibleMoves(pos, this.getBoard());
+
+                    pieceMoves.removeIf(move -> !isValidMove(pos, move));
+
+                    possibleMoves.addAll(pieceMoves);
+                }
+            }
         }
+
+        return possibleMoves;
     }
+
+
 
     private void castle(Piece piece, Position oldPos, Position newPos){
         try {
@@ -183,18 +192,15 @@ public class Game implements GameModel {
     }
 
     private void promotion(Position newPos) {
-        Piece piece = getPiece(newPos);
-        if ("♟".equals(piece.toString())) {
-            if (newPos.getRow() == 0) {
-                board.setPiece(new Queen(Color.BLACK), newPos);
+        try {
+            Pawn pawn = (Pawn) board.getPiece(newPos);
+            if (pawn.getColor() == Color.WHITE && newPos.getRow() == 7
+                    || pawn.getColor() == Color.BLACK && newPos.getRow() == 0) {
+                board.setPiece(new Queen(pawn.getColor()), newPos);
             }
-        } else if ("♙".equals(piece.toString())) {
-                if (newPos.getRow() == 7) {
-                board.setPiece(new Queen(Color.WHITE), newPos);
-            }
-        }
+        } catch (Exception ignored) {}
     }
-    
+
     private void enPassant(Piece piece,Position oldPos, Position newPos){
         try{
             Pawn p = (Pawn) board.getPiece(pawnEnPassant);
@@ -217,67 +223,37 @@ public class Game implements GameModel {
         } catch (Exception ignored) {}
     }
 
-    protected Board getBoard() {
-        return board;
-    }
-
-    protected void setCurrentPlayer(Player currentPlayer) {
-        this.currentPlayer = currentPlayer;
-    }
-
     @Override
     public boolean isValidMove(Position oldPos, Position newPos) {
         if (board.isFree(oldPos)) {
-            throw new IllegalArgumentException("The given position does not contain a piece.");
+            Logger.error("There is no piece at this position");
+            throw new IllegalArgumentException("ERROR: There is no piece at this position");
         } else if (!board.getPiece(oldPos).getPossibleMoves(oldPos, board).contains(newPos)) {
-            throw new IllegalArgumentException("It's impossible to move here.");
+            Logger.error("This move is not possible!");
+            throw new IllegalArgumentException("ERROR: This move is not possible!");
         }
-
         Piece piece = board.getPiece(oldPos);
         Color myColor = piece.getColor();
-        Color opponentColor = piece.getColor().opposite();
+        Piece piece2 = board.getPiece(newPos);
+        Color color = piece.getColor().opposite();
 
-        GameSnapshot snapshot = new GameSnapshot(board.copy(), currentPlayer, state, pawnEnPassant, fiftyMoveCounter);
         board.setPiece(piece, newPos);
         board.dropPiece(oldPos);
 
-        Position kingPosition = board.getPiecePosition(getKing(new Player(myColor)));
+        Position whitePosition = board.getPiecePosition(getKing(new Player(myColor)));
 
-        boolean isValid = !isSquareUnderAttack(kingPosition, opponentColor);
+        boolean isValid = !getCapturePositions(new Player(color)).contains(whitePosition);
 
-        board.restore(snapshot.getBoard());
-
-        if (isValid) {
-            List<Position> opponentMoves = getCapturePositions(getOppositePlayer());
-            if (opponentMoves.contains(kingPosition)) {
-                state = GameState.CHECK;
-                if (checkMate()) {
-                    state = GameState.CHECK_MATE;
-                }
-            }
-        }
+        board.setPiece(piece, oldPos);
+        board.dropPiece(newPos);
+        board.setPiece(piece2, newPos);
 
         return isValid;
     }
 
-    private boolean isSquareUnderAttack(Position square, Color attackerColor) {
-        List<Position> attackerPositions = board.getPositionOccupiedBy(new Player(attackerColor));
-
-        for (Position attackerPos : attackerPositions) {
-            List<Position> attackerMoves = board.getPiece(attackerPos).getCapturePositions(attackerPos, board);
-            if (attackerMoves.contains(square)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private List<Position> getCapturePositions(Player player) {
         List<Position> capturesPossible = new ArrayList<>();
-
         List<Position> pieces = board.getPositionOccupiedBy(player);
-
         for (Position position : pieces) {
             List<Position> capturesPiece = board.getPiece(position).getCapturePositions(position, board);
             capturesPossible.addAll(capturesPiece);
@@ -285,34 +261,33 @@ public class Game implements GameModel {
         return capturesPossible;
     }
 
-
     private King getKing(Player player) {
-        return player.color() == Color.WHITE ? whiteKing : blackKing;
+        return player.getColor() == Color.WHITE ? whiteKing : blackKing;
     }
 
-
     private boolean check() {
-        King king = getKing(currentPlayer);
-        return isSquareUnderAttack(board.getPiecePosition(king), currentPlayer.color().opposite());
+        return getCapturePositions(currentPlayer).contains(board.getPiecePosition(getKing(getOppositePlayer())));
     }
 
     private boolean checkMate() {
-        List<Position> pieces = board.getPositionOccupiedBy(currentPlayer);
-        for (Position piecePos : pieces) {
-            Piece piece = board.getPiece(piecePos);
-            List<Position> moves = piece.getPossibleMoves(piecePos, board);
-
-            for (Position newPos : moves) {
-                GameSnapshot snapshot = new GameSnapshot(board.copy(), currentPlayer, state, pawnEnPassant, fiftyMoveCounter);
-                board.setPiece(piece, newPos);
-                board.dropPiece(piecePos);
-
-                if (!check()) {
-                    moveHistory.push(snapshot);
-                    return false;
+        List<Position> pieces = board.getPositionOccupiedBy(getOppositePlayer());
+        for (Position piece : pieces) {
+            List<Position> possibleMoves = getPossibleMoves(piece);
+            for (Position possibleMove : possibleMoves) {
+                if (isValidMove(piece, possibleMove)) {
+                    Piece piece2 = getPiece(possibleMove);
+                    board.setPiece(getPiece(piece), possibleMove);
+                    board.dropPiece(piece);
+                    if (!check()) {
+                        board.setPiece(getPiece(possibleMove), piece);
+                        board.dropPiece(possibleMove);
+                        board.setPiece(piece2, possibleMove);
+                        return false;
+                    }
+                    board.setPiece(getPiece(possibleMove), piece);
+                    board.dropPiece(possibleMove);
+                    board.setPiece(piece2, possibleMove);
                 }
-
-                board.restore(snapshot.getBoard());
             }
         }
         return true;
@@ -320,55 +295,22 @@ public class Game implements GameModel {
 
     private boolean stalemate() {
         List<Position> pieces = board.getPositionOccupiedBy(getOppositePlayer());
-        boolean stalemate = false;
         for (Position piece : pieces) {
-            List<Position> moves = getPossibleMoves(piece);
-
-            for (Position newPos : moves) {
+            List<Position> possibleMoves = getPossibleMoves(piece);
+            for (Position newPos : possibleMoves) {
                 if (isValidMove(piece, newPos)) {
-                    return stalemate;
+                    return false;
                 }
             }
         }
-        stalemate = true;
-        return stalemate;
+        return true;
     }
 
-    private static class GameSnapshot {
-        private final Board board;
-        private final Player currentPlayer;
-        private final GameState state;
-        private final Position pawnEnPassant;
-        private final int fiftyMoveCounter;
-
-        public GameSnapshot(Board board, Player currentPlayer, GameState state, Position pawnEnPassant, int fiftyMoveCounter) {
-            this.board = board.copy();
-            this.currentPlayer = currentPlayer;
-            this.state = state;
-            this.pawnEnPassant = pawnEnPassant;
-            this.fiftyMoveCounter = fiftyMoveCounter;
-        }
-
-        public Board getBoard() {
-            return board;
-        }
-
-        public Player getCurrentPlayer() {
-            return currentPlayer;
-        }
-
-        public GameState getState() {
-            return state;
-        }
-
-        public Position getPawnEnPassant() {
-            return pawnEnPassant;
-        }
-
-        public int getFiftyMoveCounter() {
-            return fiftyMoveCounter;
+    public void undoMove() {
+        if (!boardHistory.isEmpty()) {
+            board = new Board(boardHistory.pop());
+            currentPlayer = getOppositePlayer();
+            state = GameState.PLAY;
         }
     }
 }
-    
-
